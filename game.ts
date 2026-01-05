@@ -2,6 +2,8 @@ import * as readline from "readline";
 
 interface PlayerState {
   balance: number;
+  level: number;
+  hpp: number;
   inventory: {
     personal_information: number
   }
@@ -9,6 +11,8 @@ interface PlayerState {
 
 const state: PlayerState = {
   balance: 0,
+  level: 1,
+  hpp: 0,
   inventory: {
     personal_information: 0,
   }
@@ -21,6 +25,28 @@ const rline = readline.createInterface({
 });
 
 let busy = false;
+
+function hppRequired(level: number): number {
+  return 5 * Math.pow(2, level - 1);
+}
+
+function checkLevelUp() {
+  let requiredHpp = hppRequired(state.level);
+  while (state.hpp >= requiredHpp) {
+    state.hpp -= requiredHpp;
+    state.level += 1;
+    console.log(`\n01001000 [ Level Up!  ~  ${state.level - 1} -> ${state.level} ] 01001001`);
+    requiredHpp = hppRequired(state.level);
+  }
+  renderStatus();
+}
+
+function renderStatus() {
+  console.clear();
+  console.log("welcome to termploit, a silly lil terminal game :P");
+  console.log("commands: 'hack toaster', 'hack fridge', 'sell personal_information', 'exit'\n");
+  console.log(`LVL ${state.level}  ~  ${state.hpp}/${hppRequired(state.level)} HPP\n`);
+}
 
 function progressBar(
   label: string,
@@ -47,9 +73,7 @@ function progressBar(
   });
 }
 
-console.log("welcome to termploit, a silly lil terminal game :P")
-console.log("commands: 'hack toaster', 'sell personal_information', 'exit'\n");
-
+renderStatus();
 rline.prompt();
 
 rline.on("line", async (line) => {
@@ -65,14 +89,18 @@ rline.on("line", async (line) => {
       busy = true;
       await progressBar("hacking toaster", 4000);
       state.inventory.personal_information += 1;
+      state.hpp += 1;
       console.log("you have successfully hacked and bypassed a toaster's firewall. Gains: [Personal Information] x1\n");
+      checkLevelUp();
       busy = false;
       break;
     case "hack fridge":
       busy = true;
       await progressBar("hacking fridge", 24000);
-      state.inventory.personal_information += 7;
-      console.log("you have successfully hacked and bypassed a smart fridge's firewall. Gains: [Personal Information] x7\n");
+      state.inventory.personal_information += 10;
+      state.hpp += 10;
+      console.log("you have successfully hacked and bypassed a smart fridge's firewall. Gains: [Personal Information] x10\n");
+      checkLevelUp();
       busy = false;
       break;
     case "sell personal_information":
