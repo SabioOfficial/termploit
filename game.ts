@@ -68,6 +68,13 @@ rline.on("line", async (line) => {
       console.log("you have successfully hacked and bypassed a toaster's firewall. Gains: [Personal Information] x1\n");
       busy = false;
       break;
+    case "hack fridge":
+      busy = true;
+      await progressBar("hacking fridge", 24000);
+      state.inventory.personal_information += 7;
+      console.log("you have successfully hacked and bypassed a smart fridge's firewall. Gains: [Personal Information] x7\n");
+      busy = false;
+      break;
     case "sell personal_information":
       if (state.inventory.personal_information > 0) {
         busy = true;
