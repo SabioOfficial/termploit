@@ -62,8 +62,32 @@ async function showLevelUp(oldLevel: number, newLevel: number) {
 
 function renderStatus() {
   console.clear();
-  console.log("welcome to termploit, a silly lil terminal game :P");
-  console.log("commands: 'hack toaster', 'hack fridge', 'sell personal_information', 'exit'\n");
+  console.log("welcome to termploit, a silly lil terminal game :P\n");
+  console.log(`
+commands:
+  > hack
+    Hack a machine. Gives Items and Hack Performance Points (HPP).
+
+    > toaster
+      Hack a toaster. Gives x1 [Personal Information] and 1 HPP. Takes 4 Hack Power (HP).
+
+    > fridge
+      Hack a fridge. Gives x10 [Personal Information] and 10 HPP. Takes 24 Hack Power (HP).
+
+  > sell
+    Sell an item from your inventory. Gives Hack Bucks (H$).
+
+    > personal_information
+      Sell personal information to companies. Gives H$1-2 per [Personal Information].
+
+  > exit
+    Exit the game.
+  \n`);
+  console.log(`
+flags:
+  > -a
+    Sells all of the item. Used on command "sell".
+  `);
   console.log(`LVL ${state.level}  ~  ${state.hpp}/${hppRequired(state.level)} HPP\n`);
 }
 
@@ -103,6 +127,10 @@ function waitForAnyKey(): Promise<void> {
   });
 }
 
+function clamp(value: number, min: number, max: number) {
+  return Math.min(Math.max(value, min), max);
+}
+
 renderStatus();
 rline.prompt();
 
@@ -134,18 +162,27 @@ rline.on("line", async (line) => {
       busy = false;
       break;
     case "sell personal_information":
-      if (state.inventory.personal_information > 0) {
-        busy = true;
-        const price = Math.floor(Math.random() * 2) + 1;
-        await progressBar("selling data", (Math.floor(Math.random() * 5) + 1) * 1000);
-        state.balance += price;
-        state.inventory.personal_information -= 1;
-        console.log(`you sold [Personal information] x1 for H$ ${price}.\n`);
-        busy = false;
-      } else {
+    case "sell personal_information -a": {
+      if (state.inventory.personal_information <= 0) {
         console.log("you don't have any personal data to sell you silly cat meow\n");
+        break;
       }
+      busy = true;
+      const sellAll = input.endsWith("-a"); // this will do for now
+      const amount = sellAll ? state.inventory.personal_information : 1;
+      // config start :D
+      const baseTime = 500;
+      const perItemTime = 300;
+      // config stop :(
+      await progressBar("selling data", clamp(baseTime + perItemTime * amount, 1000, 6000));
+      let totalPrice = 0;
+      for (let i = 0; i < amount; i++) totalPrice += Math.floor(Math.random() * 2) + 1;
+      state.balance += totalPrice;
+      state.inventory.personal_information -= amount;
+      console.log(`you sold x${amount} [Personal Information] for H$ ${totalPrice}.\n`);
+      busy = false;
       break;
+    }
     case "exit":
       console.log("disconnecting from termploit...\n");
       process.exit(0);
