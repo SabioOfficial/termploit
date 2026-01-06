@@ -1,0 +1,1 @@
+`npx tsx game.ts` to start, `npm install` as well

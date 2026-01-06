@@ -30,15 +30,34 @@ function hppRequired(level: number): number {
   return 5 * Math.pow(2, level - 1);
 }
 
-function checkLevelUp() {
+async function checkLevelUp() {
   let requiredHpp = hppRequired(state.level);
   while (state.hpp >= requiredHpp) {
+    const oldLevel = state.level;
     state.hpp -= requiredHpp;
     state.level += 1;
-    console.log(`\n01001000 [ Level Up!  ~  ${state.level - 1} -> ${state.level} ] 01001001`);
+    await showLevelUp(oldLevel, state.level);
     requiredHpp = hppRequired(state.level);
   }
   renderStatus();
+}
+
+async function showLevelUp(oldLevel: number, newLevel: number) {
+  for (let i = 0; i < 8; i++) {
+    console.clear();
+    if (i % 2 === 0) {
+      console.log("\n\n");
+      console.log("01001000 01001001 01001000 01001001\n");
+      console.log(`        >>> LEVEL UP <<<`);
+      console.log(`             ${oldLevel} > ${newLevel}\n`);
+      console.log("01001000 01001001 01001000 01001001");
+    }
+    await new Promise((resolve) => setTimeout(resolve, 250));
+  }
+  console.clear();
+  console.log(`>>> LEVEL UP! ${oldLevel} > ${newLevel} <<<`);
+  console.log("\npress any key to continue...");
+  await waitForAnyKey();
 }
 
 function renderStatus() {
@@ -73,6 +92,17 @@ function progressBar(
   });
 }
 
+function waitForAnyKey(): Promise<void> {
+  return new Promise((resolve) => {
+    process.stdin.setRawMode(true);
+    process.stdin.resume();
+    process.stdin.once("data", () => {
+      process.stdin.setRawMode(false);
+      resolve();
+    });
+  });
+}
+
 renderStatus();
 rline.prompt();
 
@@ -91,7 +121,7 @@ rline.on("line", async (line) => {
       state.inventory.personal_information += 1;
       state.hpp += 1;
       console.log("you have successfully hacked and bypassed a toaster's firewall. Gains: [Personal Information] x1\n");
-      checkLevelUp();
+      await checkLevelUp();
       busy = false;
       break;
     case "hack fridge":
@@ -100,7 +130,7 @@ rline.on("line", async (line) => {
       state.inventory.personal_information += 10;
       state.hpp += 10;
       console.log("you have successfully hacked and bypassed a smart fridge's firewall. Gains: [Personal Information] x10\n");
-      checkLevelUp();
+      await checkLevelUp();
       busy = false;
       break;
     case "sell personal_information":
