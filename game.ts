@@ -4,6 +4,7 @@ interface PlayerState {
   balance: number;
   level: number;
   hpp: number;
+  hackPower: number;
   inventory: {
     personal_information: number
   }
@@ -13,6 +14,7 @@ const state: PlayerState = {
   balance: 0,
   level: 1,
   hpp: 0,
+  hackPower: 1,
   inventory: {
     personal_information: 0,
   }
@@ -36,6 +38,7 @@ async function checkLevelUp() {
     const oldLevel = state.level;
     state.hpp -= requiredHpp;
     state.level += 1;
+    state.hackPower = state.level;
     await showLevelUp(oldLevel, state.level);
     requiredHpp = hppRequired(state.level);
   }
@@ -88,7 +91,8 @@ flags:
   > -a
     Sells all of the item. Used on command "sell".
   `);
-  console.log(`LVL ${state.level}  ~  ${state.hpp}/${hppRequired(state.level)} HPP\n`);
+  console.log(`LVL ${state.level}  ~  ${state.hpp}/${hppRequired(state.level)} HPP`);
+  console.log(`HP ${state.hackPower}  ~  ${state.hackPower} HP/s\n`)
 }
 
 function progressBar(
@@ -131,6 +135,11 @@ function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
 }
 
+function hackTimeCalc(hackDifficulty: number): number {
+  const seconds = Math.ceil(hackDifficulty / state.hackPower);
+  return seconds * 1000;
+}
+
 renderStatus();
 rline.prompt();
 
@@ -145,7 +154,7 @@ rline.on("line", async (line) => {
   switch (input) {
     case "hack toaster":
       busy = true;
-      await progressBar("hacking toaster", 4000);
+      await progressBar("hacking toaster", hackTimeCalc(4));
       state.inventory.personal_information += 1;
       state.hpp += 1;
       console.log("you have successfully hacked and bypassed a toaster's firewall. Gains: [Personal Information] x1\n");
@@ -154,7 +163,7 @@ rline.on("line", async (line) => {
       break;
     case "hack fridge":
       busy = true;
-      await progressBar("hacking fridge", 24000);
+      await progressBar("hacking fridge", hackTimeCalc(24));
       state.inventory.personal_information += 10;
       state.hpp += 10;
       console.log("you have successfully hacked and bypassed a smart fridge's firewall. Gains: [Personal Information] x10\n");
