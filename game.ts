@@ -105,11 +105,13 @@ function progressBar(
     const interval = setInterval(() => {
       const elapsed = Date.now() - start;
       const progress = Math.min(elapsed / duration, 1);
-      const filled = Math.floor(progress * width);
-      const empty = width - filled;
+      const exact = progress * width;
+      const fullCount = Math.floor(exact);
+      const hasMid = fullCount < width && exact > fullCount;
 
+      let bar = "█".repeat(fullCount) + (hasMid ? "▒" : "") + " ".repeat(width - fullCount - (hasMid ? 1 : 0));
       readline.cursorTo(process.stdout, 0);
-      process.stdout.write(`${label} [${"█".repeat(filled)}${" ".repeat(empty)}] ${Math.floor(progress * 100)}%`);
+      process.stdout.write(`${label} [${bar}] ${Math.floor(progress * 100)}%`);
       if (progress >= 1) {
         clearInterval(interval);
         readline.clearLine(process.stdout, 0);
