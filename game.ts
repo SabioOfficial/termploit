@@ -27,6 +27,7 @@ const rline = readline.createInterface({
 });
 
 let busy = false;
+let firstStartup = true;
 
 function hppRequired(level: number): number {
   return 5 * Math.pow(2, level - 1);
@@ -65,8 +66,9 @@ async function showLevelUp(oldLevel: number, newLevel: number) {
 
 function renderStatus() {
   console.clear();
-  console.log("welcome to termploit, a silly lil terminal game :P\n");
-  console.log(`
+  if (firstStartup) {
+    console.log("welcome to termploit, a silly lil terminal game :P\n");
+    console.log(`
 commands:
   > hack
     Hack a machine. Gives Items and Hack Performance Points (HPP).
@@ -83,14 +85,20 @@ commands:
     > personal_information
       Sell personal information to companies. Gives H$1-2 per [Personal Information].
 
+  > purchase
+    Purchase upgrades to help you breach machines easier! Uses Hack Bucks (H$).
+
   > exit
     Exit the game.
-  \n`);
-  console.log(`
+    `);
+    console.log(`
 flags:
   > -a
     Sells all of the item. Used on command "sell".
-  `);
+    `);
+
+    firstStartup = false;
+  }
   console.log(`LVL ${state.level}  ~  ${state.hpp}/${hppRequired(state.level)} HPP`);
   console.log(`HP ${state.hackPower}  ~  ${state.hackPower} HP/s\n`)
 }
