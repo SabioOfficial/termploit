@@ -100,7 +100,7 @@ flags:
     firstStartup = false;
   }
   console.log(`LVL ${state.level}  ~  ${state.hpp}/${hppRequired(state.level)} HPP`);
-  console.log(`HP ${state.hackPower}  ~  ${state.hackPower} HP/s\n`)
+  console.log(`          ${state.hackPower} HP/s\n`)
 }
 
 function progressBar(
@@ -162,6 +162,9 @@ rline.on("line", async (line) => {
 
   const input = line.trim().toLowerCase();
   switch (input) {
+    case "hack":
+      console.log("Unlocked hacks: 'hack toaster', 'hack fridge'.\n")
+      break;
     case "hack toaster":
       busy = true;
       await progressBar("hacking toaster", hackTimeCalc(4));
@@ -179,6 +182,9 @@ rline.on("line", async (line) => {
       console.log("you have successfully hacked and bypassed a smart fridge's firewall. Gains: [Personal Information] x10\n");
       await checkLevelUp();
       busy = false;
+      break;
+    case "sell":
+      console.log("Unlocked items eligible to be sold: 'sell personal_information'.\n");
       break;
     case "sell personal_information":
     case "sell personal_information -a": {
@@ -202,6 +208,9 @@ rline.on("line", async (line) => {
       busy = false;
       break;
     }
+    case "purchase":
+      console.log("Available upgrades to be purchased: None (coming soon).\n");
+      break;
     case "exit":
       console.log("disconnecting from termploit...\n");
       process.exit(0);
