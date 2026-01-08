@@ -37,6 +37,7 @@ const rline = readline.createInterface({
 
 let busy = false;
 let firstStartup = true;
+let hackerPalProgress = 0;
 
 function hppRequired(level: number): number {
   return 5 * Math.pow(2, level - 1);
@@ -48,7 +49,7 @@ async function checkLevelUp() {
     const oldLevel = state.level;
     state.hpp -= requiredHpp; 
     state.level += 1;
-    state.hackPower = state.level;
+    state.hackPower = calculateHackPower();
     await showLevelUp(oldLevel, state.level);
     requiredHpp = hppRequired(state.level);
   }
@@ -71,6 +72,25 @@ async function showLevelUp(oldLevel: number, newLevel: number) {
   console.log(`>>> LEVEL UP! ${oldLevel} > ${newLevel} <<<`);
   console.log("\npress any key to continue...");
   await waitForAnyKey();
+}
+
+function startHackerPalLoop() {
+  setInterval(async () => {
+    if (state.upgrades.hacker_pal <= 0) return;
+    if (busy) return;
+    
+    hackerPalProgress += 100 / 12_000;
+    if (hackerPalProgress >= 1) {
+      const hacks = state.upgrades.hacker_pal;
+      state.inventory.personal_information += hacks;
+      state.hpp += hacks;
+      console.log(`\n[Hacker Pal] Hacked toaster x${hacks} (+${hacks} PI, +${hacks} HPP)\n`);
+      await checkLevelUp();
+      hackerPalProgress = 0;
+    }
+    renderStatus();
+    rline.prompt();
+  }, 100)
 }
 
 function renderStatus() {
@@ -108,6 +128,14 @@ flags:
 
     firstStartup = false;
   }
+
+  if (state.upgrades.hacker_pal > 0) {
+    const width = 20;
+    const filled = Math.floor(hackerPalProgress * width);
+    const bar = "█".repeat(filled) + " ".repeat(width - filled);
+    console.log(`Hacker Pal [${bar}] ${Math.floor(hackerPalProgress*100)}%\n`);
+  }
+
   console.log(`LVL ${state.level}  ~  ${state.hpp}/${hppRequired(state.level)} HPP`);
   console.log(`          ${state.hackPower} HP/s\n`)
 }
@@ -159,7 +187,14 @@ function hackTimeCalc(hackDifficulty: number): number {
   return seconds * 1000;
 }
 
+function calculateHackPower(): number {
+  const base = state.level;
+  const upgradeMultiplier = Math.pow(2, state.upgrades.hacker_pal);
+  return base * upgradeMultiplier;
+}
+
 renderStatus();
+startHackerPalLoop();
 rline.prompt();
 
 rline.on("line", async (line) => {
@@ -232,6 +267,8 @@ rline.on("line", async (line) => {
           `  Effect  ~  Doubles Hack Power per Hacker Pal\n`
         );
       }
+      await waitForAnyKey();
+      renderStatus();
       break;
     case "purchase hacker_pal":
       if (!(state.lifetimeBalance >= (10 * Math.pow(4, state.upgrades.hacker_pal)) * 0.25)) {
@@ -244,14 +281,15 @@ rline.on("line", async (line) => {
       }
       state.balance -= 10 * Math.pow(4, state.upgrades.hacker_pal);
       state.upgrades.hacker_pal += 1;
-      state.hackPower *= 2;
+      state.hackPower = calculateHackPower();
 
       console.log(
         `\nHacker Pal acquired!\n` +
         `Hack Power doubled.\n` +
         `Next cost: H$ ${10 * Math.pow(4, state.upgrades.hacker_pal)}\n`
       );
-      
+      await waitForAnyKey();
+      renderStatus();
       break;
     case "exit":
       console.log("disconnecting from termploit...\n");
