@@ -1,23 +1,32 @@
 import * as readline from "readline";
 
+// TODO: use snake casing (because its cooler)
 interface PlayerState {
   balance: number;
+  lifetimeBalance: number;
   level: number;
   hpp: number;
   hackPower: number;
   inventory: {
     personal_information: number
-  }
+  };
+  upgrades: {
+    hacker_pal: number
+  };
 }
 
 const state: PlayerState = {
   balance: 0,
+  lifetimeBalance: 0,
   level: 1,
   hpp: 0,
   hackPower: 1,
   inventory: {
     personal_information: 0,
-  }
+  },
+  upgrades: {
+    hacker_pal: 0,
+  },
 }
 
 const rline = readline.createInterface({
@@ -37,7 +46,7 @@ async function checkLevelUp() {
   let requiredHpp = hppRequired(state.level);
   while (state.hpp >= requiredHpp) {
     const oldLevel = state.level;
-    state.hpp -= requiredHpp;
+    state.hpp -= requiredHpp; 
     state.level += 1;
     state.hackPower = state.level;
     await showLevelUp(oldLevel, state.level);
@@ -203,13 +212,46 @@ rline.on("line", async (line) => {
       let totalPrice = 0;
       for (let i = 0; i < amount; i++) totalPrice += Math.floor(Math.random() * 2) + 1;
       state.balance += totalPrice;
+      state.lifetimeBalance += totalPrice;
       state.inventory.personal_information -= amount;
       console.log(`you sold x${amount} [Personal Information] for H$ ${totalPrice}.\n`);
       busy = false;
       break;
     }
     case "purchase":
-      console.log("Available upgrades to be purchased: None (coming soon).\n");
+      if (!(state.lifetimeBalance >= (10 * Math.pow(4, state.upgrades.hacker_pal)) * 0.25)) { // lmao wtf is this
+        console.log("No upgrades available yet. Earn more H$ and come back!\n");
+        break;
+      }
+      console.log("Available upgrades:\n");
+      if (state.lifetimeBalance >= (10 * Math.pow(4, state.upgrades.hacker_pal)) * 0.25) {
+        console.log( // ooh wowie you can do formatting like this :P
+          `> hacker_pal\n` +
+          `  Cost    ~  H$ ${10 * Math.pow(4, state.upgrades.hacker_pal)}\n` +
+          `  Owned   ~  ${state.upgrades.hacker_pal}\n` +
+          `  Effect  ~  Doubles Hack Power per Hacker Pal\n`
+        );
+      }
+      break;
+    case "purchase hacker_pal":
+      if (!(state.lifetimeBalance >= (10 * Math.pow(4, state.upgrades.hacker_pal)) * 0.25)) {
+        console.log("You haven't unlocked this upgrade yet.\n");
+        break;
+      }
+      if (state.balance < 10 * Math.pow(4, state.upgrades.hacker_pal)) {
+        console.log(`Not enough Hacker Bucks. Need H$ ${10 * Math.pow(4, state.upgrades.hacker_pal)}.\n`);
+        break;
+      }
+      state.balance -= 10 * Math.pow(4, state.upgrades.hacker_pal);
+      state.upgrades.hacker_pal += 1;
+      state.hackPower *= 2;
+
+      console.log(
+        `\nHacker Pal acquired!\n` +
+        `Hack Power doubled.\n` +
+        `Next cost: H$ ${10 * Math.pow(4, state.upgrades.hacker_pal)}\n`
+      );
+      
       break;
     case "exit":
       console.log("disconnecting from termploit...\n");
